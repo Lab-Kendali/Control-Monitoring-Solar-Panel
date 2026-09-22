@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Solar Panel Monitoring System</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:#f1f5f9;
+  color:#0f172a;
+}
+
+/* ==============================
+   HEADER
+   ============================== */
+
+.header{
+  background:#0f172a;
+  color:#fff;
+  padding:22px 16px;
+  text-align:center;
+}
+
+.header h1{
+  margin:0;
+  font-size:26px;
+}
+
+.header p{
+  margin:7px 0 0;
+  color:#cbd5e1;
+}
+
+/* ==============================
+   CONTAINER
+   ============================== */
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:20px;
+}
+
+/* ==============================
+   PANEL GRID
+   ============================== */
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+/* ==============================
+   CARD
+   ============================== */
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 3px 12px rgba(0,0,0,.08);
+}
+
+.panel-title{
+  font-size:21px;
+  font-weight:bold;
+  margin-bottom:14px;
+}
+
+/* ==============================
+   VALUE
+   ============================== */
+
+.value{
+  display:flex;
+  justify-content:space-between;
+  padding:9px 0;
+  border-bottom:1px solid #e2e8f0;
+}
+
+.value:last-child{
+  border-bottom:0;
+}
+
+.value span:last-child{
+  font-weight:bold;
+}
+
+/* ==============================
+   SUMMARY
+   ============================== */
+
+.summary{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+  margin-top:16px;
+}
+
+.big-card{
+  text-align:center;
+}
+
+.big-value{
+  font-size:30px;
+  font-weight:bold;
+  margin-top:8px;
+}
+
+/* ==============================
+   CONTROL
+   ============================== */
+
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+  margin-top:16px;
+}
+
+.status{
+  font-size:25px;
+  font-weight:bold;
+  margin:10px 0 15px;
+}
+
+/* ==============================
+   BUTTON
+   ============================== */
+
+button{
+  border:0;
+  border-radius:10px;
+  padding:13px 18px;
+  margin:4px;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  opacity:.85;
+}
+
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed;
+}
+
+.on{
+  background:#16a34a;
+  color:#fff;
+}
+
+.off{
+  background:#dc2626;
+  color:#fff;
+}
+
+.motor{
+  background:#2563eb;
+  color:#fff;
+}
+
+.stop{
+  background:#475569;
+  color:#fff;
+}
+
+/* ==============================
+   INFO
+   ============================== */
+
+.info{
+  margin-top:16px;
+  background:#fff;
+  border-radius:14px;
+  padding:14px;
+  text-align:center;
+  box-shadow:0 3px 12px rgba(0,0,0,.08);
+}
+
+.online{
+  color:#16a34a;
+  font-weight:bold;
+}
+
+.offline{
+  color:#dc2626;
+  font-weight:bold;
+}
+
+.error{
+  color:#dc2626;
+  font-weight:bold;
+}
+
+.small{
+  font-size:13px;
+  color:#64748b;
+  margin-top:8px;
+}
+
+/* ==============================
+   RESPONSIVE
+   ============================== */
+
+@media(max-width:850px){
+
+  .grid,
+  .summary,
+  .controls{
+    grid-template-columns:1fr;
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+
+<div class="header">
+
+  <h1>
+    ☀️ SOLAR PANEL MONITORING SYSTEM
+  </h1>
+
+  <p>
+    Monitoring & Control 3 Panel Surya Berbasis ESP32 + Supabase
+  </p>
+
+</div>
+
+
+
+<div class="container">
+
+
+<!-- =====================================================
+     PANEL 1 - 2 - 3
+     ===================================================== -->
+
+<div class="grid">
+
+
+  <!-- ================= PANEL 1 ================= -->
+
+  <div class="card">
+
+    <div class="panel-title">
+      PANEL 1
+    </div>
+
+    <div class="value">
+      <span>Tegangan</span>
+      <span id="p1v">-- V</span>
+    </div>
+
+    <div class="value">
+      <span>Arus</span>
+      <span id="p1i">-- A</span>
+    </div>
+
+    <div class="value">
+      <span>Daya</span>
+      <span id="p1p">-- W</span>
+    </div>
+
+    <div class="value">
+      <span>Suhu</span>
+      <span id="p1t">-- °C</span>
+    </div>
+
+  </div>
+
+
+
+  <!-- ================= PANEL 2 ================= -->
+
+  <div class="card">
+
+    <div class="panel-title">
+      PANEL 2
+    </div>
+
+    <div class="value">
+      <span>Tegangan</span>
+      <span id="p2v">-- V</span>
+    </div>
+
+    <div class="value">
+      <span>Arus</span>
+      <span id="p2i">-- A</span>
+    </div>
+
+    <div class="value">
+      <span>Daya</span>
+      <span id="p2p">-- W</span>
+    </div>
+
+    <div class="value">
+      <span>Suhu</span>
+      <span id="p2t">-- °C</span>
+    </div>
+
+  </div>
+
+
+
+  <!-- ================= PANEL 3 ================= -->
+
+  <div class="card">
+
+    <div class="panel-title">
+      PANEL 3
+    </div>
+
+    <div class="value">
+      <span>Tegangan</span>
+      <span id="p3v">-- V</span>
+    </div>
+
+    <div class="value">
+      <span>Arus</span>
+      <span id="p3i">-- A</span>
+    </div>
+
+    <div class="value">
+      <span>Daya</span>
+      <span id="p3p">-- W</span>
+    </div>
+
+    <div class="value">
+      <span>Suhu</span>
+      <span id="p3t">-- °C</span>
+    </div>
+
+  </div>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     SUMMARY
+     ===================================================== -->
+
+<div class="summary">
+
+
+  <!-- TOTAL DAYA -->
+
+  <div class="card big-card">
+
+    <div>
+      ⚡ TOTAL DAYA
+    </div>
+
+    <div class="big-value">
+
+      <span id="totalPower">
+        --
+      </span>
+
+      W
+
+    </div>
+
+  </div>
+
+
+
+  <!-- INTENSITAS CAHAYA -->
+
+  <div class="card big-card">
+
+    <div>
+      ☀️ INTENSITAS CAHAYA
+    </div>
+
+    <div class="big-value">
+
+      <span id="light">
+        --
+      </span>
+
+      lux
+
+    </div>
+
+  </div>
+
+
+
+  <!-- FLOW -->
+
+  <div class="card big-card">
+
+    <div>
+      💧 FLOW AIR
+    </div>
+
+    <div class="big-value">
+
+      <span id="flow">
+        --
+      </span>
+
+      L/min
+
+    </div>
+
+  </div>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     CONTROL
+     ===================================================== -->
+
+<div class="controls">
+
+
+  <!-- ================= POMPA ================= -->
+
+  <div
+    class="card"
+    style="text-align:center"
+  >
+
+    <h2>
+      💧 Pompa Penyemprot
+    </h2>
+
+    <div class="status">
+
+      Status:
+
+      <span id="pumpStatus">
+        OFF
+      </span>
+
+    </div>
+
+
+    <button
+      class="on"
+      onclick="setPump(true)"
+    >
+      POMPA ON
+    </button>
+
+
+    <button
+      class="off"
+      onclick="setPump(false)"
+    >
+      POMPA OFF
+    </button>
+
+  </div>
+
+
+
+  <!-- ================= MOTOR ================= -->
+
+  <div
+    class="card"
+    style="text-align:center"
+  >
+
+    <h2>
+      ↕ Kemiringan Panel
+    </h2>
+
+    <div class="status">
+
+      Motor:
+
+      <span id="motorStatus">
+        STOP
+      </span>
+
+    </div>
+
+
+    <button
+      class="motor"
+      onclick="setMotor('LEFT')"
+    >
+      ◀ KIRI
+    </button>
+
+
+    <button
+      class="stop"
+      onclick="setMotor('STOP')"
+    >
+      STOP
+    </button>
+
+
+    <button
+      class="motor"
+      onclick="setMotor('RIGHT')"
+    >
+      KANAN ▶
+    </button>
+
+  </div>
+
+
+</div>
+
+
+
+<!-- =====================================================
+     STATUS SUPABASE
+     ===================================================== -->
+
+<div class="info">
+
+  Status Supabase:
+
+  <span
+    id="connection"
+    class="offline"
+  >
+    MENGHUBUNGKAN...
+  </span>
+
+
+  <div class="small">
+
+    Data sensor dari ESP32 dikirim ke Supabase setiap
+    <b>1 menit</b>.
+
+  </div>
+
+
+  <div class="small">
+
+    Dashboard melakukan pengecekan data secara otomatis.
+
+  </div>
+
+
+  <div
+    id="message"
+    class="small"
+  ></div>
+
+</div>
+
+
+</div>
+
+
+
+<script>
+
+
+/* =========================================================
+   SUPABASE CONFIGURATION
+   =========================================================
+
+   GANTI:
+
+   1. SUPABASE_URL
+   2. SUPABASE_ANON_KEY
+
+   JANGAN gunakan service_role key.
+
+   ========================================================= */
+
+
+const SUPABASE_URL =
+  "https://xkiumhyccalpoinentfz.supabase.co";
+
+
+const SUPABASE_ANON_KEY =
+  "sb_publishable__0gtdL0AGju3hx8gLLnWvQ_-n8KlQUL";
+
+
+const supabaseClient =
+  window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+
+
+/* =========================================================
+   HELPER NUMBER
+   ========================================================= */
+
+function numberValue(
+  value,
+  decimals = 2
+){
+
+  const n = Number(value);
+
+  return Number.isFinite(n)
+    ? n.toFixed(decimals)
+    : "--";
+
+}
+
+
+
+/* =========================================================
+   HELPER TEMPERATURE
+   ========================================================= */
+
+function temperatureValue(value){
+
+  const n = Number(value);
+
+  return Number.isFinite(n)
+    ? n.toFixed(1) + " °C"
+    : "ERR";
+
+}
+
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+function showMessage(
+  text,
+  isError = false
+){
+
+  const el =
+    document.getElementById("message");
+
+  el.textContent = text;
+
+  el.className =
+    isError
+      ? "small error"
+      : "small";
+
+}
+
+
+
+/* =========================================================
+   DISPLAY DATA
+   ========================================================= */
+
+function displayData(d){
+
+
+  /* ================= PANEL 1 ================= */
+
+  document.getElementById("p1v").textContent =
+    numberValue(
+      d["Tegangan 1"],
+      2
+    ) + " V";
+
+
+  document.getElementById("p1i").textContent =
+    numberValue(
+      d["Arus 1"],
+      2
+    ) + " A";
+
+
+  document.getElementById("p1p").textContent =
+    numberValue(
+      d["Daya 1"],
+      2
+    ) + " W";
+
+
+  document.getElementById("p1t").textContent =
+    temperatureValue(
+      d["Suhu 1"]
+    );
+
+
+
+  /* ================= PANEL 2 ================= */
+
+  document.getElementById("p2v").textContent =
+    numberValue(
+      d["Tegangan 2"],
+      2
+    ) + " V";
+
+
+  document.getElementById("p2i").textContent =
+    numberValue(
+      d["Arus 2"],
+      2
+    ) + " A";
+
+
+  document.getElementById("p2p").textContent =
+    numberValue(
+      d["Daya 2"],
+      2
+    ) + " W";
+
+
+  document.getElementById("p2t").textContent =
+    temperatureValue(
+      d["Suhu 2"]
+    );
+
+
+
+  /* ================= PANEL 3 ================= */
+
+  document.getElementById("p3v").textContent =
+    numberValue(
+      d["Tegangan 3"],
+      2
+    ) + " V";
+
+
+  document.getElementById("p3i").textContent =
+    numberValue(
+      d["Arus 3"],
+      2
+    ) + " A";
+
+
+  document.getElementById("p3p").textContent =
+    numberValue(
+      d["Daya 3"],
+      2
+    ) + " W";
+
+
+  document.getElementById("p3t").textContent =
+    temperatureValue(
+      d["Suhu 3"]
+    );
+
+
+
+  /* ================= TOTAL DAYA ================= */
+
+  document.getElementById("totalPower").textContent =
+    numberValue(
+      d["Daya Total"],
+      2
+    );
+
+
+
+  /* ================= CAHAYA ================= */
+
+  document.getElementById("light").textContent =
+    numberValue(
+      d["Intensitas Cahaya"],
+      0
+    );
+
+
+
+  /* ================= FLOW ================= */
+
+  document.getElementById("flow").textContent =
+    numberValue(
+      d["Flow"],
+      2
+    );
+
+
+}
+
+
+
+/* =========================================================
+   GET LATEST SENSOR DATA
+   ========================================================= */
+
+async function getLatestData(){
+
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+
+    .from("solar_data")
+
+    .select("*")
+
+    .order(
+      "Waktu",
+      {
+        ascending:false
+      }
+    )
+
+    .limit(1);
+
+
+
+  /* ================= ERROR ================= */
+
+  if(error){
+
+    document.getElementById(
+      "connection"
+    ).textContent =
+      "TERPUTUS";
+
+
+    document.getElementById(
+      "connection"
+    ).className =
+      "offline";
+
+
+    showMessage(
+      "Gagal membaca solar_data: " +
+      error.message,
+      true
+    );
+
+    return;
+
+  }
+
+
+
+  /* ================= NO DATA ================= */
+
+  if(
+    !data ||
+    data.length === 0
+  ){
+
+    document.getElementById(
+      "connection"
+    ).textContent =
+      "TERHUBUNG";
+
+
+    document.getElementById(
+      "connection"
+    ).className =
+      "online";
+
+
+    showMessage(
+      "Belum ada data dari ESP32."
+    );
+
+    return;
+
+  }
+
+
+
+  /* ================= DISPLAY ================= */
+
+  displayData(
+    data[0]
+  );
+
+
+
+  /* ================= STATUS ================= */
+
+  document.getElementById(
+    "connection"
+  ).textContent =
+    "TERHUBUNG";
+
+
+  document.getElementById(
+    "connection"
+  ).className =
+    "online";
+
+
+
+  /* ================= WAKTU DATA ================= */
+
+  if(data[0]["Waktu"]){
+
+    showMessage(
+      "Data terakhir: " +
+      new Date(
+        data[0]["Waktu"]
+      ).toLocaleString(
+        "id-ID"
+      )
+    );
+
+  }
+
+}
+
+
+
+/* =========================================================
+   GET CURRENT CONTROL STATE
+   ========================================================= */
+
+async function getControlState(){
+
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+
+    .from("solar_control")
+
+    .select(
+      "pump,motor"
+    )
+
+    .eq(
+      "id",
+      1
+    )
+
+    .single();
+
+
+
+  /* ================= ERROR ================= */
+
+  if(error){
+
+    showMessage(
+      "Gagal membaca solar_control: " +
+      error.message,
+      true
+    );
+
+    return;
+
+  }
+
+
+
+  /* ================= POMPA ================= */
+
+  const pumpStatus =
+    document.getElementById(
+      "pumpStatus"
+    );
+
+
+  pumpStatus.textContent =
+    data.pump
+      ? "ON"
+      : "OFF";
+
+
+  pumpStatus.style.color =
+    data.pump
+      ? "#16a34a"
+      : "#dc2626";
+
+
+
+  /* ================= MOTOR ================= */
+
+  const motorStatus =
+    document.getElementById(
+      "motorStatus"
+    );
+
+
+  motorStatus.textContent =
+    data.motor ||
+    "STOP";
+
+
+  motorStatus.style.color =
+    data.motor === "STOP"
+      ? "#475569"
+      : "#2563eb";
+
+}
+
+
+
+/* =========================================================
+   PUMP CONTROL
+   ========================================================= */
+
+async function setPump(state){
+
+
+  showMessage(
+    "Mengirim perintah pompa..."
+  );
+
+
+
+  const {
+    error
+  } = await supabaseClient
+
+    .from("solar_control")
+
+    .update({
+
+      pump:state,
+
+      updated_at:
+        new Date().toISOString()
+
+    })
+
+    .eq(
+      "id",
+      1
+    );
+
+
+
+  /* ================= ERROR ================= */
+
+  if(error){
+
+    showMessage(
+      "Gagal mengontrol pompa: " +
+      error.message,
+      true
+    );
+
+    return;
+
+  }
+
+
+
+  /* ================= UPDATE STATUS ================= */
+
+  const pumpStatus =
+    document.getElementById(
+      "pumpStatus"
+    );
+
+
+  pumpStatus.textContent =
+    state
+      ? "ON"
+      : "OFF";
+
+
+  pumpStatus.style.color =
+    state
+      ? "#16a34a"
+      : "#dc2626";
+
+
+
+  showMessage(
+    "Perintah pompa berhasil dikirim."
+  );
+
+}
+
+
+
+/* =========================================================
+   MOTOR CONTROL
+   ========================================================= */
+
+async function setMotor(
+  direction
+){
+
+
+  /* ================= VALIDASI ================= */
+
+  if(
+    ![
+      "LEFT",
+      "RIGHT",
+      "STOP"
+    ].includes(direction)
+  ){
+
+    return;
+
+  }
+
+
+
+  showMessage(
+    "Mengirim perintah motor..."
+  );
+
+
+
+  const {
+    error
+  } = await supabaseClient
+
+    .from("solar_control")
+
+    .update({
+
+      motor:direction,
+
+      updated_at:
+        new Date().toISOString()
+
+    })
+
+    .eq(
+      "id",
+      1
+    );
+
+
+
+  /* ================= ERROR ================= */
+
+  if(error){
+
+    showMessage(
+      "Gagal mengontrol motor: " +
+      error.message,
+      true
+    );
+
+    return;
+
+  }
+
+
+
+  /* ================= UPDATE STATUS ================= */
+
+  const motorStatus =
+    document.getElementById(
+      "motorStatus"
+    );
+
+
+  motorStatus.textContent =
+    direction;
+
+
+  motorStatus.style.color =
+    direction === "STOP"
+      ? "#475569"
+      : "#2563eb";
+
+
+
+  showMessage(
+    "Perintah motor berhasil dikirim."
+  );
+
+}
+
+
+
+/* =========================================================
+   REFRESH DASHBOARD
+   ========================================================= */
+
+async function refreshDashboard(){
+
+  await getLatestData();
+
+  await getControlState();
+
+}
+
+
+
+/* =========================================================
+   INITIAL LOAD
+   ========================================================= */
+
+refreshDashboard();
+
+
+
+/* =========================================================
+   AUTO REFRESH
+   =========================================================
+
+   Dashboard mengecek Supabase setiap 2 detik.
+
+   CATATAN:
+   ESP32 mengirim data baru setiap 1 menit.
+
+   Jadi walaupun dashboard mengecek setiap 2 detik,
+   data sensor baru akan berubah ketika ESP32 mengirim
+   data berikutnya.
+
+   ========================================================= */
+
+setInterval(
+  refreshDashboard,
+  2000
+);
+
+
+
+/* =========================================================
+   SUPABASE REALTIME
+   =========================================================
+
+   Jika Realtime diaktifkan pada Supabase,
+   dashboard dapat menerima perubahan secara langsung.
+
+   ========================================================= */
+
+supabaseClient
+
+  .channel(
+    "solar-dashboard"
+  )
+
+  .on(
+
+    "postgres_changes",
+
+    {
+
+      event:"*",
+
+      schema:"public",
+
+      table:"solar_data"
+
+    },
+
+    payload => {
+
+      if(payload.new){
+
+        displayData(
+          payload.new
+        );
+
+      }
+
+    }
+
+  )
+
+  .on(
+
+    "postgres_changes",
+
+    {
+
+      event:"*",
+
+      schema:"public",
+
+      table:"solar_control"
+
+    },
+
+    payload => {
+
+      if(payload.new){
+
+        const d =
+          payload.new;
+
+
+
+        /* ================= POMPA ================= */
+
+        const pumpStatus =
+          document.getElementById(
+            "pumpStatus"
+          );
+
+
+        pumpStatus.textContent =
+          d.pump
+            ? "ON"
+            : "OFF";
+
+
+        pumpStatus.style.color =
+          d.pump
+            ? "#16a34a"
+            : "#dc2626";
+
+
+
+        /* ================= MOTOR ================= */
+
+        const motorStatus =
+          document.getElementById(
+            "motorStatus"
+          );
+
+
+        motorStatus.textContent =
+          d.motor ||
+          "STOP";
+
+
+        motorStatus.style.color =
+          d.motor === "STOP"
+            ? "#475569"
+            : "#2563eb";
+
+      }
+
+    }
+
+  )
+
+  .subscribe();
+
+
+</script>
+
+
+</body>
+
+</html>
